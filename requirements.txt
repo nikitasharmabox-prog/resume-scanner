@@ -1,0 +1,8 @@
+streamlit
+groq
+pypdf
+pdf2image
+pytesseract
+pillow
+sckikit-learn
+numpy
