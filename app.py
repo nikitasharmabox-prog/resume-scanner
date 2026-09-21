@@ -111,7 +111,7 @@ with col1:
     if st.button("Generate JD with Groq"):
         client = get_groq_client()
         prompt = f"Write a job description for: '{job_title}' requiring skills: '{req_skills}'."
-        res = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": prompt}])
+        res = client.chat.completions.create(model="llama-3-8b-8192", messages=[{"role": "user", "content": prompt}])
         st.session_state['jd_text'] = res.choices[0].message.content
 
     jd_text = st.text_area("Job Description Context", value=st.session_state.get('jd_text', ''), height=180)
@@ -133,7 +133,7 @@ with col2:
                 f"Resume:\n{resume_text[:3000]}"
             )
             parsed = json.loads(client.chat.completions.create(
-                model="llama-3.1-8b-instant", messages=[{"role": "user", "content": prompt}],
+                model="llama-3-8b-8192", messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
             ).choices[0].message.content)
 
@@ -164,7 +164,7 @@ if query := st.chat_input("Ask a question about candidates..."):
     client = get_groq_client()
     candidates = get_candidates()
     bot_prompt = f"You are an AI HR assistant. Data: {json.dumps(candidates)}. User Query: {query}"
-    res = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": bot_prompt}])
+    res = client.chat.completions.create(model="llama-3-8b-8192", messages=[{"role": "user", "content": bot_prompt}])
     reply = res.choices[0].message.content
     
     st.session_state.messages.append({"role": "assistant", "content": reply})
