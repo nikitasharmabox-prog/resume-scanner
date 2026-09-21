@@ -64,9 +64,9 @@ def insert_candidate(info, match_score):
 
 # --- HELPER FUNCTIONS ---
 def get_groq_client():
-    api_key = os.environ.get("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY")
+    api_key = st.secrets.get("GROQ_API_KEY") 
     if not api_key:
-        st.error("GROQ_API_KEY is not configured.")
+        st.error("GROQ_API_KEY is missing! Please set it in Streamlit Secrets.")
         st.stop()
     return Groq(api_key=api_key)
 
