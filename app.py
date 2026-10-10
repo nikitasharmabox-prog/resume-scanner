@@ -134,7 +134,7 @@ with col2:
                 f"Resume:\n{resume_text[:3000]}"
             )
             completion = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="llama-3.3-70b-specdec",
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
             )
