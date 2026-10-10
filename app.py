@@ -110,7 +110,7 @@ with col1:
     req_skills = st.text_input("Required Skills")
     if st.button("Generate JD with Groq"):
         from groq import Groq
-        clean_client = Groq(api_key=st.secrets[GROQ_API_KEY"])
+        clean_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
         prompt = f"Write a job description for: '{job_title}' requiring skills: '{req_skills}'."
         res = client.chat.completions.create
         (
