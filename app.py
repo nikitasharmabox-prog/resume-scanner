@@ -13,7 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from groq import Groq
 
 # Set page configuration
-st.set_page_config(page_title="AI HR Assistant", page_icon="🚀", layout="wide")
+st.set_page_config(page_title="AI HR Assistant", layout="wide")
 
 # --- DATABASE SETUP ---
 DB_NAME = "candidates.db"
