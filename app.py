@@ -100,7 +100,7 @@ def compute_similarity(text1: str, text2: str) -> float:
     return round(float(score) * 100, 2)
 
 # --- APP INTERFACE ---
-st.title("🚀 Groq AI Resume Screening & HR Assistant")
+st.title(" Groq AI Resume Screening & HR Assistant")
 
 col1, col2 = st.columns(2)
 
