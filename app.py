@@ -133,10 +133,12 @@ with col2:
                 "Extract details as a valid JSON object containing the keys: 'Name', 'Email', 'Phone', 'Skills' (array), 'Summary'. "
                 f"Resume:\n{resume_text[:3000]}"
             )
-            parsed = json.loads(client.chat.completions.create(
-                model="llama3-8b-8192", messages=[{"role": "user", "content": prompt}],
+            completion = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
-            ).choices[0].message.content)
+            )
+            parsed = json.loads(completion.choics[0].message.content)
 
             score = compute_similarity(jd_text if jd_text else "General Evaluation", resume_text)
             insert_candidate(parsed, score)
