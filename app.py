@@ -129,7 +129,8 @@ with col2:
         if resume_text:
             client = get_groq_client()
             prompt = (
-                "Extract details as JSON: 'Name', 'Email', 'Phone', 'Skills' (array), 'Summary'. "
+                "You are a helpful assistant designed to output JSON."
+                "Extract details as a valid JSON object containing the keys: 'Name', 'Email', 'Phone', 'Skills' (array), 'Summary'. "
                 f"Resume:\n{resume_text[:3000]}"
             )
             parsed = json.loads(client.chat.completions.create(
