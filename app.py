@@ -112,8 +112,7 @@ with col1:
         from groq import Groq
         clean_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
         prompt = f"Write a job description for: '{job_title}' requiring skills: '{req_skills}'."
-        res = client.chat.completions.create
-        (
+        res = client.chat.completions.create(
         model="llama-3.1-8b-instant", 
         messages=[{"role": "user", "content": prompt}]
         )
