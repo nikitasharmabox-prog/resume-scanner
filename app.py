@@ -131,7 +131,7 @@ with col2:
         elif raw_text_input.strip(): resume_text = raw_text_input
         
         if resume_text:
-            from geoq import Groq
+            from groq import Groq
             client = Groq(api_key=st.secrets["GROQ_API_KEY"])
             prompt = (
                 "You are a helpful assistant designed to output JSON."
