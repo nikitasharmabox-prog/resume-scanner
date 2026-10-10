@@ -111,7 +111,7 @@ with col1:
     if st.button("Generate JD with Groq"):
         client = get_groq_client()
         prompt = f"Write a job description for: '{job_title}' requiring skills: '{req_skills}'."
-        res = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": prompt}])
+        res = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": prompt}])
         st.session_state['jd_text'] = res.choices[0].message.content
 
     jd_text = st.text_area("Job Description Context", value=st.session_state.get('jd_text', ''), height=180)
