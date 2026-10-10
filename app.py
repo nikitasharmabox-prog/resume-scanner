@@ -127,14 +127,15 @@ with col2:
         elif raw_text_input.strip(): resume_text = raw_text_input
         
         if resume_text:
-            client = get_groq_client()
+            from geoq import Groq
+            client = Groq(api_key=st.secrets["GROQ_API_KEY"])
             prompt = (
                 "You are a helpful assistant designed to output JSON."
                 "Extract details as a valid JSON object containing the keys: 'Name', 'Email', 'Phone', 'Skills' (array), 'Summary'. "
                 f"Resume:\n{resume_text[:3000]}"
             )
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"}
             )
