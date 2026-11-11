@@ -48,15 +48,25 @@ def init_db():
         )
     ''')
     
-    # Handle schema evolution for existing databases
+    # Handle schema evolution for existing databases safely across all SQLite versions
     cursor.execute("PRAGMA table_info(candidates)")
     cols = [col[1] for col in cursor.fetchall()]
     if "job_id" not in cols:
-        cursor.execute("ALTER TABLE candidates ADD COLUMN job_id INTEGER REFERENCES jobs(id)")
+        cursor.execute("ALTER TABLE candidates ADD COLUMN job_id INTEGER")
     if "notes" not in cols:
         cursor.execute("ALTER TABLE candidates ADD COLUMN notes TEXT")
     if "created_at" not in cols:
-        cursor.execute("ALTER TABLE candidates ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        # SQLite < 3.31.0 disallows non-constant defaults like CURRENT_TIMESTAMP in ALTER TABLE ADD COLUMN.
+        # Add column without default, then backfill existing records with datetime('now').
+        cursor.execute("ALTER TABLE candidates ADD COLUMN created_at TEXT")
+        cursor.execute("UPDATE candidates SET created_at = datetime('now') WHERE created_at IS NULL")
+
+    # Also verify jobs table columns if table existed from an older version
+    cursor.execute("PRAGMA table_info(jobs)")
+    job_cols = [col[1] for col in cursor.fetchall()]
+    if "created_at" not in job_cols:
+        cursor.execute("ALTER TABLE jobs ADD COLUMN created_at TEXT")
+        cursor.execute("UPDATE jobs SET created_at = datetime('now') WHERE created_at IS NULL")
         
     conn.commit()
     conn.close()
