@@ -1,7 +1,9 @@
 import os
 import io
+import sys
 import json
 import re
+import shutil
 from typing import Dict, Any, List, Tuple, Optional
 import streamlit as st
 from PIL import Image
@@ -13,6 +15,50 @@ from sklearn.metrics.pairwise import cosine_similarity
 from groq import Groq
 
 GROQ_MODEL = "openai/gpt-oss-120b"
+
+def configure_tesseract() -> bool:
+    """
+    Auto-detect and configure the Tesseract OCR executable path across Windows, macOS, and Linux.
+    Fixes Windows 'tesseract is not installed or it's not in your PATH' errors.
+    """
+    # 1. Check custom path in secrets or environment variable
+    custom_path = None
+    try:
+        custom_path = st.secrets.get("TESSERACT_PATH")
+    except Exception:
+        pass
+    if not custom_path:
+        custom_path = os.environ.get("TESSERACT_PATH")
+        
+    if custom_path and os.path.isfile(custom_path):
+        pytesseract.pytesseract.tesseract_cmd = custom_path
+        return True
+
+    # 2. Check if tesseract binary is already available on system PATH
+    if shutil.which("tesseract"):
+        return True
+
+    # 3. Check common Windows installation paths
+    if sys.platform.startswith("win"):
+        win_candidates = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
+            os.path.expandvars(r"%PROGRAMFILES%\Tesseract-OCR\tesseract.exe"),
+            os.path.expandvars(r"%PROGRAMFILES(X86)%\Tesseract-OCR\tesseract.exe"),
+        ]
+        for p in win_candidates:
+            if os.path.isfile(p):
+                pytesseract.pytesseract.tesseract_cmd = p
+                return True
+
+    # 4. Check common macOS paths
+    for mac_path in ["/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract", "/usr/bin/tesseract"]:
+        if os.path.isfile(mac_path):
+            pytesseract.pytesseract.tesseract_cmd = mac_path
+            return True
+
+    return False
 
 def get_groq_client() -> Groq:
     """Initialize Groq client with API key from secrets or environment."""
@@ -29,14 +75,17 @@ def get_groq_client() -> Groq:
     return Groq(api_key=api_key)
 
 def extract_text_from_file(file) -> str:
-    """Extract text from uploaded PDF or image file with OCR fallback."""
+    """Extract text from uploaded PDF or image file with OCR fallback and Windows auto-detection."""
     ext = os.path.splitext(file.name)[1].lower()
     text = ""
     file.seek(0)
     file_bytes = file.read()
+    
+    # Auto-detect Tesseract executable on the system (e.g. Windows Program Files)
+    tesseract_available = configure_tesseract()
 
     if ext == ".pdf":
-        # First attempt native text extraction
+        # First attempt native digital text extraction via pypdf (requires zero OCR tools)
         try:
             reader = pypdf.PdfReader(io.BytesIO(file_bytes))
             for page in reader.pages:
@@ -46,24 +95,46 @@ def extract_text_from_file(file) -> str:
         except Exception:
             pass
 
-        # If text is empty or very short, fallback to OCR
+        # If PDF is scanned (no native text) and Tesseract is available, try OCR
         if not text.strip() or len(text.strip()) < 40:
-            try:
-                images = convert_from_bytes(file_bytes)
-                ocr_text = ""
-                for img in images:
-                    ocr_text += pytesseract.image_to_string(img) + "\n"
-                if ocr_text.strip():
-                    text = ocr_text
-            except Exception as e:
+            if tesseract_available:
+                try:
+                    images = convert_from_bytes(file_bytes)
+                    ocr_text = ""
+                    for img in images:
+                        ocr_text += pytesseract.image_to_string(img) + "\n"
+                    if ocr_text.strip():
+                        text = ocr_text
+                except Exception as e:
+                    if not text.strip():
+                        return f"Error: OCR extraction failed ({str(e)})"
+            else:
                 if not text.strip():
-                    return f"Error: OCR extraction failed ({str(e)})"
+                    return (
+                        "Error: Could not extract text from this scanned PDF, and Tesseract OCR is not installed on this machine.\n\n"
+                        "To fix this on Windows:\n"
+                        "1. Download the Windows installer from: https://github.com/UB-Mannheim/tesseract/wiki\n"
+                        "2. Run the installer (installs to C:\\Program Files\\Tesseract-OCR)\n\n"
+                        "💡 Quick Alternative: Upload a digital PDF (saved from Word/Docs/Canva) or paste the resume text in the box below!"
+                    )
     elif ext in [".jpg", ".jpeg", ".png"]:
+        if not tesseract_available:
+            return (
+                "Error: Image OCR requires Tesseract OCR, which is not installed or not in PATH on this Windows laptop.\n\n"
+                "### How to fix on Windows (takes 1 minute):\n"
+                "1. Download and run the official Windows installer: [UB-Mannheim Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)\n"
+                "2. Complete the setup (it installs by default to `C:\\Program Files\\Tesseract-OCR`).\n"
+                "3. Restart the Streamlit app — our auto-detection will immediately find it!\n\n"
+                "💡 **Instant Workaround**: Upload your resume as a standard PDF file or paste the plain text directly in the box below!"
+            )
         try:
             image = Image.open(io.BytesIO(file_bytes))
             text = pytesseract.image_to_string(image)
         except Exception as e:
-            return f"Error: Image OCR extraction failed ({str(e)})"
+            return (
+                f"Error: Image OCR extraction failed ({str(e)}).\n\n"
+                "Please verify Tesseract is installed at `C:\\Program Files\\Tesseract-OCR\\tesseract.exe` or paste the resume text directly."
+            )
     else:
         return f"Error: Unsupported file format '{ext}'"
 

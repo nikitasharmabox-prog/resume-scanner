@@ -82,6 +82,15 @@ The application equips HR recruiters with an end-to-end recruitment suite: an au
 
 ### 1. Prerequisites (OCR & PDF Rendering)
 
+- **Windows**:
+  - Download the official installer: [UB-Mannheim Tesseract OCR for Windows](https://github.com/UB-Mannheim/tesseract/wiki) (e.g. `tesseract-ocr-w64-setup-5.4.0.exe`).
+  - Run the setup (default path is `C:\Program Files\Tesseract-OCR`).
+  - *Or install via Windows Terminal (winget)*:
+    ```cmd
+    winget install UB-Mannheim.TesseractOCR
+    ```
+  - *(Note: The application automatically auto-detects `C:\Program Files\Tesseract-OCR\tesseract.exe` on Windows without needing to modify your PATH manually!)*
+
 - **macOS** (via Homebrew):
   ```bash
   brew install tesseract poppler
