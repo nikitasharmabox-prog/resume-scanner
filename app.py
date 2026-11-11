@@ -14,6 +14,9 @@ from groq import Groq
 # Set page configuration
 st.set_page_config(page_title="AI HR Assistant", layout="wide")
 
+# Groq Model Configuration
+GROQ_MODEL = "openai/gpt-oss-120b"
+
 # --- DATABASE SETUP ---
 DB_NAME = "candidates.db"
 
@@ -158,7 +161,7 @@ with col1:
                     client = get_groq_client()
                     prompt = f"Write a professional job description for: '{job_title}' requiring skills: '{req_skills}'."
                     res = client.chat.completions.create(
-                        model="llama-3.1-8b-instant", 
+                        model=GROQ_MODEL, 
                         messages=[{"role": "user", "content": prompt}]
                     )
                     st.session_state["jd_text"] = res.choices[0].message.content
@@ -205,7 +208,7 @@ with col2:
                         f"Resume:\n{resume_text[:4000]}"
                     )
                     completion = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
+                        model=GROQ_MODEL,
                         messages=[{"role": "user", "content": prompt}],
                         response_format={"type": "json_object"}
                     )
@@ -255,7 +258,7 @@ if query := st.chat_input("Ask a question about candidates..."):
                 chat_context.append({"role": msg["role"], "content": msg["content"]})
 
             res = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=GROQ_MODEL,
                 messages=chat_context
             )
             reply = res.choices[0].message.content
