@@ -11,7 +11,7 @@ import ai_helper
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="TalentMatch AI | HR Recruiter Portal",
+    page_title="ResumeScanner AI | HR Recruiter Portal",
     page_icon="💼",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -208,7 +208,7 @@ def render_login_page():
             <div style="display: inline-flex; background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 16px; border-radius: 20px; font-size: 2.8rem; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35); margin-bottom: 1rem;">
                 💼
             </div>
-            <h1 style="margin: 0; font-size: 2.3rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">TalentMatch AI</h1>
+            <h1 style="margin: 0; font-size: 2.3rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">ResumeScanner AI</h1>
             <p style="color: #94a3b8; font-size: 1.05rem; margin-top: 0.4rem;">
                 Enterprise HR Recruitment & Candidate Scoring Suite
             </p>
@@ -261,7 +261,7 @@ def render_sidebar():
                 💼
             </div>
             <div>
-                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">TalentMatch</h3>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">ResumeScanner</h3>
                 <span style="font-size: 0.72rem; color: #818cf8; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">HR Recruiter Suite</span>
             </div>
         </div>

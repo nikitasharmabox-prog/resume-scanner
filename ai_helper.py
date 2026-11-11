@@ -303,7 +303,7 @@ def ask_hr_chat_assistant(messages: List[Dict[str, str]], jobs_data: List[Dict[s
     ]
     
     system_prompt = f"""
-You are 'TalentMatch AI Assistant', an intelligent, proactive HR recruitment companion.
+You are 'ResumeScanner AI Assistant', an intelligent, proactive HR recruitment companion.
 You have real-time access to the company's active Job Openings and Screened Candidates Database.
 
 Active Jobs ({len(jobs_summary)}):

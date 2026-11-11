@@ -1,4 +1,4 @@
-# TalentMatch AI: HR Recruiter Portal & Resume Screening Assistant
+# ResumeScanner AI: HR Recruiter Portal & Resume Screening Assistant
 
 An enterprise-ready HR recruitment portal and candidate screening platform built with **Streamlit**, **Groq LLM** (`openai/gpt-oss-120b`), **Tesseract OCR**, and **scikit-learn**.
 
