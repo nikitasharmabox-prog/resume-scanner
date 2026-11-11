@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -45,6 +46,17 @@ def init_db():
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (job_id) REFERENCES jobs (id) ON DELETE SET NULL
+        )
+    ''')
+
+    # Create recruiter sessions table for persistent login across browser refreshes
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recruiter_sessions (
+            token TEXT PRIMARY KEY,
+            recruiter_email TEXT,
+            recruiter_name TEXT,
+            recruiter_role TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
@@ -580,4 +592,46 @@ def get_dashboard_stats() -> Dict[str, Any]:
         "score_bins": score_bins,
         "top_skills": top_skills
     }
+
+# --- RECRUITER SESSION PERSISTENCE ---
+def create_session(email: str, name: str, role: str) -> str:
+    """Create a persistent recruiter session token in the database."""
+    token = uuid.uuid4().hex
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT OR REPLACE INTO recruiter_sessions (token, recruiter_email, recruiter_name, recruiter_role, created_at)
+        VALUES (?, ?, ?, ?, datetime('now'))
+    ''', (token, email, name, role))
+    conn.commit()
+    conn.close()
+    return token
+
+def get_session(token: str) -> Optional[Dict[str, Any]]:
+    """Retrieve session details by token."""
+    if not token:
+        return None
+    conn = get_connection()
+    cursor = conn.cursor()
+    row = cursor.execute('SELECT * FROM recruiter_sessions WHERE token = ?', (token,)).fetchone()
+    conn.close()
+    if row:
+        return {
+            "token": row["token"],
+            "email": row["recruiter_email"],
+            "name": row["recruiter_name"],
+            "role": row["recruiter_role"]
+        }
+    return None
+
+def delete_session(token: str):
+    """Delete session upon logout."""
+    if not token:
+        return
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM recruiter_sessions WHERE token = ?', (token,))
+    conn.commit()
+    conn.close()
+
 

@@ -164,7 +164,20 @@ def style_altair_dark(chart):
         titleColor='#f8fafc'
     )
 
-# --- SESSION STATE INITIALIZATION ---
+# --- SESSION RESTORE & STATE INITIALIZATION ---
+# Check if a persistent session token exists in the URL query parameters (survives browser refresh)
+auth_token = st.query_params.get("auth")
+if auth_token and not st.session_state.get("authenticated", False):
+    session_data = db.get_session(auth_token)
+    if session_data:
+        st.session_state["authenticated"] = True
+        st.session_state["recruiter_name"] = session_data["name"]
+        st.session_state["recruiter_role"] = session_data["role"]
+        st.session_state["session_token"] = auth_token
+    else:
+        # Invalid or expired token, clear it from the URL
+        st.query_params.clear()
+
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
@@ -173,6 +186,9 @@ if "recruiter_name" not in st.session_state:
 
 if "recruiter_role" not in st.session_state:
     st.session_state["recruiter_role"] = "Lead Technical Recruiter"
+
+if "session_token" not in st.session_state:
+    st.session_state["session_token"] = auth_token or ""
 
 if "chat_messages" not in st.session_state:
     st.session_state["chat_messages"] = [
@@ -211,8 +227,14 @@ def render_login_page():
                 submitted = st.form_submit_button("Sign In to Recruiter Portal", use_container_width=True, type="primary")
                 if submitted:
                     if email.strip() and password.strip():
+                        rec_name = email.split("@")[0].replace(".", " ").title() if "@" in email else "Recruiter"
+                        rec_role = "Technical Recruiter"
+                        token = db.create_session(email.strip(), rec_name, rec_role)
+                        st.query_params["auth"] = token
                         st.session_state["authenticated"] = True
-                        st.session_state["recruiter_name"] = email.split("@")[0].replace(".", " ").title() if "@" in email else "Recruiter"
+                        st.session_state["recruiter_name"] = rec_name
+                        st.session_state["recruiter_role"] = rec_role
+                        st.session_state["session_token"] = token
                         st.success("Authentication successful! Redirecting to recruitment dashboard...")
                         st.rerun()
                     else:
@@ -221,9 +243,12 @@ def render_login_page():
             st.divider()
             st.markdown("<p style='font-size: 0.85rem; color: #94a3b8; text-align: center;'>Demo Evaluation Mode is Active</p>", unsafe_allow_html=True)
             if st.button("⚡ One-Click Instant Demo Login", use_container_width=True):
+                token = db.create_session("recruiter@company.com", "Sarah Jenkins", "Lead Technical Recruiter")
+                st.query_params["auth"] = token
                 st.session_state["authenticated"] = True
                 st.session_state["recruiter_name"] = "Sarah Jenkins"
                 st.session_state["recruiter_role"] = "Lead Technical Recruiter"
+                st.session_state["session_token"] = token
                 st.rerun()
 
 # --- SIDEBAR COMPONENT ---
@@ -259,16 +284,27 @@ def render_sidebar():
         
         st.markdown("<p style='font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.4rem;'>Navigation</p>", unsafe_allow_html=True)
         
+        nav_options = [
+            "📊 Dashboard",
+            "💼 Jobs & JD Management",
+            "📋 Candidate Board",
+            "💬 AI Recruiter Chat"
+        ]
+        
+        # Restore active tab from query parameters if present, preserving state on refresh
+        current_tab_param = st.query_params.get("tab", "📊 Dashboard")
+        default_index = nav_options.index(current_tab_param) if current_tab_param in nav_options else 0
+        
         nav_choice = st.radio(
             "Go to",
-            options=[
-                "📊 Dashboard",
-                "💼 Jobs & JD Management",
-                "📋 Candidate Board",
-                "💬 AI Recruiter Chat"
-            ],
+            options=nav_options,
+            index=default_index,
             label_visibility="collapsed"
         )
+        
+        # Keep URL query param synced with current navigation selection
+        if st.query_params.get("tab") != nav_choice:
+            st.query_params["tab"] = nav_choice
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.divider()
@@ -302,7 +338,12 @@ def render_sidebar():
 
         # Logout button
         if st.button("🚪 Sign Out", use_container_width=True):
+            session_tok = st.session_state.get("session_token")
+            if session_tok:
+                db.delete_session(session_tok)
             st.session_state["authenticated"] = False
+            st.session_state["session_token"] = ""
+            st.query_params.clear()
             st.rerun()
             
     return nav_choice
